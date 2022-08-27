@@ -1,3 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using jwtToken.Data;
+using jwtToken.Models;
+using AutoMapper;
+using jwtToken.Interfaces;
+using jwtToken.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,6 +13,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddEntityFrameworkNpgsql().AddDbContext<AppDbContext>(
+    opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("conn"))
+);
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
