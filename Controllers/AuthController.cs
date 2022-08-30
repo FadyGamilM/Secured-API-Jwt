@@ -29,9 +29,9 @@ namespace jwtToken.Controllers
          //! (1) we need to validate the incoming request.
          if (ModelState.IsValid){
             //! (2) we need to check if this email is already exists
-            var UserExists = await this._userManager.FindByEmailAsync(registerationDto.Email);
+            var ExistingUser = await this._userManager.FindByEmailAsync(registerationDto.Email);
             //* if it exists, so we can't register this user again
-            if (UserExists != null){
+            if (ExistingUser != null){
                return BadRequest(
                   new AuthResult() {
                      Result = false,
@@ -77,6 +77,59 @@ namespace jwtToken.Controllers
          //! if the body of the request is not valid
          return BadRequest();
       }
+
+      [HttpPost]
+      [Route("login")]
+      public async Task<IActionResult> Login([FromBody] UserLoginDto loginDto)
+      {
+         //! (1) check if the request format is valid
+         if(ModelState.IsValid){
+            //! (2) lookup for this email if its exists in DB or not
+            var ExistingUser = await this._userManager.FindByEmailAsync(loginDto.Email);
+            if (ExistingUser == null){
+               return BadRequest(
+                  new AuthResult(){
+                     Result = false,
+                     Errors = new List<string>(){
+                        "Invalid Credentials"
+                     }
+                  }
+               );
+            }else{
+               //! (3) check if the password matches the hashed pass in the DB
+               var PassMatches = await this._userManager.CheckPasswordAsync(ExistingUser, loginDto.Password);
+               if (PassMatches == true){
+                  //! (4) generate a token
+                  var token = GenerateJwtToken(ExistingUser);
+                  return Ok(
+                     new AuthResult(){
+                        Result = true,
+                        Token = token
+                     }
+                  );
+               }else{
+                  return BadRequest(
+                  new AuthResult(){
+                     Result = false,
+                     Errors = new List<string>(){
+                        "Invalid Credentials"
+                     }
+                  }
+               );
+               }
+            }
+         }else{
+            return BadRequest(
+               new AuthResult(){
+                  Errors = new List<String>(){
+                     "The Email and Password are required, Check your email and password format"
+                  },
+               Result = false
+               }
+            );
+         }  
+      }
+
       private string GenerateJwtToken(IdentityUser user)
       {
          var jwtTokenHandler = new JwtSecurityTokenHandler();
