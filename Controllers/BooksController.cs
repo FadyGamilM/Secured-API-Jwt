@@ -3,8 +3,12 @@ using jwtToken.Interfaces;
 using jwtToken.DTOs;
 using jwtToken.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 namespace jwtToken.Controllers
 {
+   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
    [ApiController]
    [Route("api/books")]
    public class BooksController : ControllerBase
